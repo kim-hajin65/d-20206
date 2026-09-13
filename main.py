@@ -32,12 +32,9 @@ def load_data():
 # 데이터 로드 실행
 df = load_data()
 
-# --- Section 1: 영화별 일별 관객수 추이 분석 ---
-st.header("1. 영화별 일별 관객수 변화 추이")
 
 # [3. 영화 선택 기능]
 # 중복 없는 영화 목록 추출 및 누적관객수 내림차순 정렬
-# 각 영화의 최대 누적관객수를 구해서 내림차순 정렬
 movie_rank = (
     df.groupby("영화명")["누적관객수"]
     .max()
@@ -46,14 +43,17 @@ movie_rank = (
 )
 movie_list = movie_rank["영화명"].tolist()
 
-# 드롭다운 선택 상자 생성 (기본값: 첫 번째 영화)
+# 사이드바 또는 상단에서 영화를 고를 수 있도록 수선 (모든 그래프에 일괄 적용)
 selected_movie = st.selectbox("분석할 영화를 선택하세요:", movie_list)
 
 # 사용자가 선택한 영화 데이터만 필터링
 filtered_df = df[df["영화명"] == selected_movie]
 
+
+# --- Section 1: 영화별 일별 관객수 추이 (선 그래프) ---
+st.header("1. 영화별 일별 관객수 변화 추이 (선 그래프)")
+
 # [4. Plotly 선 그래프 그리기]
-# 선택한 영화의 기준일자별 해당일관객수 그래프 생성
 fig1 = px.line(
     filtered_df,
     x="기준일자",
@@ -73,11 +73,24 @@ st.caption(
 
 st.divider()  # 구분선
 
-# --- Section 2: 추후 추가될 그래프 구역 ---
-st.header("2. 추가 분석 구역 (예정)")
-st.info("이곳에 추후 새로운 그래프나 데이터 분석 결과가 추가될 예정입니다.")
 
-# 추가 그래프 레이아웃 예시 자릿표시
-# fig2 = px.bar(...)
-# st.plotly_chart(fig2, use_container_width=True)
-# st.caption("💡 **이 그래프로 알 수 있는 것:** [설명 문구를 입력하세요]")
+# --- Section 2: 영화별 누적 관객수 추이 (영역 차트) ---
+st.header("2. 영화별 누적 관객수 증가 추이 (영역 차트)")
+
+# [영역 차트 그리기]
+# px.area 함수를 사용하여 기준일자별 누적관객수를 영역차트로 표현합니다.
+fig2 = px.area(
+    filtered_df,
+    x="기준일자",
+    y="누적관객수",
+    title=f"'{selected_movie}'의 누적 관객수 성취 추이",
+    labels={"기준일자": "날짜", "누적관객수": "누적 관객수(명)"},
+)
+
+# Plotly 그래프 Streamlit에 출력
+st.plotly_chart(fig2, use_container_width=True)
+
+# [그래프 설명란]
+st.caption(
+    f"💡 **이 그래프로 알 수 있는 것:** '{selected_movie}'의 누적 관객수가 시간에 따라 어떻게 가파르게 혹은 완만하게 증가하는지 전체적인 흥행 가속도를 한눈에 확인할 수 있습니다."
+)
