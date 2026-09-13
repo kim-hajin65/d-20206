@@ -33,8 +33,8 @@ def load_data():
 df = load_data()
 
 
-# [3. 영화 선택 기능]
-# 중복 없는 영화 목록 추출 및 누적관객수 내림차순 정렬
+# [3. 영화 선택 및 상위 영화 추출]
+# 각 영화의 최대 누적관객수를 구해서 내림차순 정렬
 movie_rank = (
     df.groupby("영화명")["누적관객수"]
     .max()
@@ -43,17 +43,16 @@ movie_rank = (
 )
 movie_list = movie_rank["영화명"].tolist()
 
-# 사이드바 또는 상단에서 영화를 고를 수 있도록 수선 (모든 그래프에 일괄 적용)
+# 단일 영화 분석용 드롭다운 선택 상자 (1, 2번 그래프용)
 selected_movie = st.selectbox("분석할 영화를 선택하세요:", movie_list)
 
-# 사용자가 선택한 영화 데이터만 필터링
+# 사용자가 선택한 개별 영화 데이터 필터링
 filtered_df = df[df["영화명"] == selected_movie]
 
 
-# --- Section 1: 영화별 일별 관객수 추이 (선 그래프) ---
+# --- Section 1: 개별 영화 일별 관객수 추이 (선 그래프) ---
 st.header("1. 영화별 일별 관객수 변화 추이 (선 그래프)")
 
-# [4. Plotly 선 그래프 그리기]
 fig1 = px.line(
     filtered_df,
     x="기준일자",
@@ -66,7 +65,7 @@ fig1 = px.line(
 # Plotly 그래프 Streamlit에 출력
 st.plotly_chart(fig1, use_container_width=True)
 
-# [5. 그래프 설명란]
+# 그래프 설명란
 st.caption(
     f"💡 **이 그래프로 알 수 있는 것:** '{selected_movie}'의 상영 기간 동안 일별 관객수가 가장 많았던 날(최고 흥행 시점)과 관객수 감소 추세를 파악할 수 있습니다."
 )
@@ -74,11 +73,9 @@ st.caption(
 st.divider()  # 구분선
 
 
-# --- Section 2: 영화별 누적 관객수 추이 (영역 차트) ---
+# --- Section 2: 개별 영화 누적 관객수 추이 (영역 차트) ---
 st.header("2. 영화별 누적 관객수 증가 추이 (영역 차트)")
 
-# [영역 차트 그리기]
-# px.area 함수를 사용하여 기준일자별 누적관객수를 영역차트로 표현합니다.
 fig2 = px.area(
     filtered_df,
     x="기준일자",
@@ -90,7 +87,44 @@ fig2 = px.area(
 # Plotly 그래프 Streamlit에 출력
 st.plotly_chart(fig2, use_container_width=True)
 
-# [그래프 설명란]
+# 그래프 설명란
 st.caption(
     f"💡 **이 그래프로 알 수 있는 것:** '{selected_movie}'의 누적 관객수가 시간에 따라 어떻게 가파르게 혹은 완만하게 증가하는지 전체적인 흥행 가속도를 한눈에 확인할 수 있습니다."
+)
+
+st.divider()  # 구분선
+
+
+# --- Section 3: 조건 만족 TOP 5 영화 비교 (다중 선 그래프) ---
+st.header("3. 장기 흥행 TOP 5 영화 비교 (다중 선 그래프)")
+
+# 1) 영화별 TOP 10 차트 진입 일수(데이터에 등장한 횟수) 계산
+movie_days = df.groupby("영화명").size().reset_index(name="등장일수")
+
+# 2) 20일 이상 등장한 영화 목록만 필터링
+long_running_movies = movie_days[movie_days["등장일수"] >= 20]["영화명"]
+
+# 3) 조건에 부합하는 영화들 중 누적관객수가 가장 높은 상위 5개 영화 선택
+filtered_rank = movie_rank[movie_rank["영화명"].isin(long_running_movies)]
+top5_long_running = filtered_rank.head(5)["영화명"].tolist()
+
+# TOP 5 영화 데이터 추출
+top5_df = df[df["영화명"].isin(top5_long_running)]
+
+# [다중 선 그래프 그리기]
+fig3 = px.line(
+    top5_df,
+    x="기준일자",
+    y="누적관객수",
+    color="영화명",  # 영화별 구분 색상 및 범례 적용
+    title="TOP 10 진입 20일 이상 영화 중 누적관객수 TOP 5 성장 추이",
+    labels={"기준일자": "날짜", "누적관객수": "누적 관객수(명)", "영화명": "영화 제목"},
+)
+
+# Plotly 그래프 Streamlit에 출력
+st.plotly_chart(fig3, use_container_width=True)
+
+# 그래프 설명란
+st.caption(
+    f"💡 **이 그래프로 알 수 있는 것:** 박스오피스 TOP 10에 20일 이상 상주하며 장기 흥행한 주요 5개 영화({', '.join(top5_long_running)})의 관객수 누적 페이스와 최종 성과를 비교할 수 있습니다."
 )
