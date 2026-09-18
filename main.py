@@ -103,7 +103,6 @@ fig_hist = px.histogram(
     title="총 관객 수 히스토그램",
     labels={"total_audi": "총 관객 수"},
 )
-# 오류 수정: bar_gap -> bargap
 fig_hist.update_layout(xaxis_title="총 관객 수", yaxis_title="영화 수", bargap=0.1)
 
 st.plotly_chart(fig_hist, use_container_width=True)
@@ -215,14 +214,16 @@ st.markdown("💡 **이 그래프로 알 수 있는 것:** 각 제작 국가별�
 # -------------------------------------------------------------------
 st.subheader("8. 10위권 체류 기간과 총 관객 수의 관계")
 
+# color="genre"가 추가되어 각 장르별로 다채롭게 시각화됨
 fig_days_scatter = px.scatter(
     df,
     x="days_in_top10",
     y="total_audi",
+    color="genre",
     hover_name="movieNm",
     title="10위권에 오래 머문 영화는 총 관객도 많은가",
-    labels={"days_in_top10": "10위권에 머문 날수", "total_audi": "총 관객 수"},
-    hover_data={"days_in_top10": ":,d", "total_audi": ":,d"},
+    labels={"days_in_top10": "10위권에 머문 날수", "total_audi": "총 관객 수", "genre": "장르"},
+    hover_data={"days_in_top10": ":,d", "total_audi": ":,d", "genre": False},
 )
 fig_days_scatter.update_layout(xaxis_title="10위권에 머문 날수", yaxis_title="총 관객 수")
 
