@@ -23,6 +23,12 @@ def load_data():
     if "genre" in df.columns:
         df["genre"] = df["genre"].astype(str).str.split("|").str[0]
 
+    # 계층형 차트(트리맵/선버스트)에서 중복 영화명으로 인한 오류 방지를 위해 고유 ID 생성
+    if "movieCd" in df.columns and "movieNm" in df.columns:
+        df["movie_unique"] = df["movieNm"] + " (" + df["movieCd"].astype(str) + ")"
+    else:
+        df["movie_unique"] = df["movieNm"]
+
     return df
 
 
@@ -65,18 +71,18 @@ st.markdown(
 # -------------------------------------------------------------------
 st.subheader("2. 장르 및 영화별 총 관객 수 분포")
 
-# Plotly 트리맵 생성 (계층 구조: genre -> movieNm, 크기: total_audi)
+# Plotly 트리맵 생성 (고유 ID 사용, 표시 표시는 movieNm 지정)
 fig_treemap = px.treemap(
     df,
-    path=["genre", "movieNm"],
+    path=["genre", "movie_unique"],
     values="total_audi",
     title="장르 및 영화별 총 관객 수",
-    hover_data={"total_audi": ":,d"},
+    hover_data={"total_audi": ":,d", "movieNm": True, "movie_unique": False},
 )
 
-# 마우스 오버 시 영화명과 총 관객 수가 정확히 표시되도록 툴팁 설정
+# 마우스 오버 시 실제 영화명과 총 관객 수가 표시되도록 설정
 fig_treemap.update_traces(
-    hovertemplate="<b>%{label}</b><br>총 관객 수: %{value:,}명<extra></extra>"
+    hovertemplate="<b>%{customdata[1]}</b><br>총 관객 수: %{value:,}명<extra></extra>"
 )
 
 # Streamlit에 그래프 출력
