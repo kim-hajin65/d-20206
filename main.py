@@ -59,20 +59,20 @@ st.markdown("💡 **이 그래프로 알 수 있는 것:** 박스오피스 상�
 
 
 # -------------------------------------------------------------------
-# 그래프 2: 장르 및 영화별 총 관객 수 (트리맵) - 오류 원천 차단
+# 그래프 2: 장르 및 영화별 총 관객 수 (트리맵)
 # -------------------------------------------------------------------
 st.subheader("2. 장르 및 영화별 총 관객 수 분포")
 
 # 1) 트리맵 전용 데이터프레임 생성 및 결측치 제거
 df_tree = df[['genre', 'movieNm', 'total_audi']].dropna().copy()
-# 2) 관객 수가 0 이하인 데이터(오류 유발) 완벽 제거
+# 2) 관객 수가 0 이하인 데이터 완벽 제거
 df_tree = df_tree[df_tree['total_audi'] > 0]
 # 3) 영화 중복 집계를 방지하기 위해 장르/영화명 기준으로 최대 관객수 추출
 df_tree = df_tree.groupby(['genre', 'movieNm'], as_index=False)['total_audi'].max()
 # 4) 계층 충돌을 막기 위해 '영화명_인덱스' 형태로 완벽하게 독립적인 노드 ID 생성
 df_tree['movie_node'] = df_tree['movieNm'] + "_" + df_tree.index.astype(str)
 
-# Plotly 트리맵 생성 (px.Constant를 활용해 최상위 뿌리를 하나로 통합하여 안정성 확보)
+# Plotly 트리맵 생성
 fig_treemap = px.treemap(
     df_tree,
     path=[px.Constant("전체 영화"), "genre", "movie_node"],
@@ -103,7 +103,8 @@ fig_hist = px.histogram(
     title="총 관객 수 히스토그램",
     labels={"total_audi": "총 관객 수"},
 )
-fig_hist.update_layout(xaxis_title="총 관객 수", yaxis_title="영화 수", bar_gap=0.1)
+# 오류 수정: bar_gap -> bargap
+fig_hist.update_layout(xaxis_title="총 관객 수", yaxis_title="영화 수", bargap=0.1)
 
 st.plotly_chart(fig_hist, use_container_width=True)
 
@@ -187,7 +188,7 @@ st.markdown("💡 **이 그래프로 알 수 있는 것:** 스크린 수와 총 
 
 
 # -------------------------------------------------------------------
-# 그래프 7: 제작 국가 및 장르별 영화 편수 (선버스트 차트) - 안정성 강화
+# 그래프 7: 제작 국가 및 장르별 영화 편수 (선버스트 차트)
 # -------------------------------------------------------------------
 st.subheader("7. 제작 국가 및 장르별 영화 편수 분포")
 
