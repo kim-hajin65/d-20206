@@ -1,3 +1,13 @@
 streamlit
+
 pandas
-plotly
+
+numpy
+
+scikit-learn
+
+matplotlib
+
+seaborn
+
+scipy
